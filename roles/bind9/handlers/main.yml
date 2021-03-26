@@ -1,0 +1,17 @@
+- name: increment zone serial
+  lineinfile:
+    path: "/var/lib/bind/{{ nsupdate.basedomain.name }}"
+    regexp: '(?i)^(\s*)\d+(\s*;\s*serial.*)$'
+    backrefs: yes
+    line: "\\g<1>{{ bind_serial | default(1) | int +1 }}\\g<2>"
+
+- name: restart bind9
+  service:
+    name: bind9
+    state: restarted
+
+- name: rndc reload
+  command: /usr/sbin/rndc reload
+
+- name: rndc thaw basedomain
+  command: /usr/sbin/rndc thaw {{ nsupdate.basedomain.name }}

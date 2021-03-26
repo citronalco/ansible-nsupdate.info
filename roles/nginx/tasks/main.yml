@@ -1,0 +1,31 @@
+- name: Install nginx-light
+  apt:
+    pkg: ['nginx-light']
+    install_recommends: no
+
+- name: Create nsupdate.info directory
+  file:
+    name: /var/www/nsupdate.info
+    state: directory
+    mode: 0755
+
+- name: Configure access_log anonymization
+  template:
+    src: templates/anonymize.conf.j2
+    dest: /etc/nginx/conf.d/anonymize.conf
+    mode: 0644
+  notify: reload nginx
+
+- name: Install nsupdate.info nginx site
+  template:
+    src: templates/nsupdate.info.j2
+    dest: /etc/nginx/sites-available/nsupdate.info
+    mode: 0644
+  notify: reload nginx
+
+- name: Activate nsupdate.info nginx site
+  file:
+    src: /etc/nginx/sites-available/nsupdate.info
+    dest: /etc/nginx/sites-enabled/nsupdate.info
+    state: link
+  notify: reload nginx

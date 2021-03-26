@@ -1,0 +1,22 @@
+- name: Install Postfix
+  apt:
+    pkg: [ "postfix", "libsasl2-modules" ]
+    install_recommends: false
+
+- name: Install Postfix configuration
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0644
+  with_items:
+    - { src: "main.cf.j2", dest: "/etc/postfix/main.cf" }
+    - { src: "header_check.j2", dest: "/etc/postfix/header_check" }
+    - { src: "sender_canonical_maps.j2", dest: "/etc/postfix/sender_canonical_maps" }
+  notify: reload postfix
+
+- name: Configure SASL authentication at remote SMTP server
+  template:
+    src: sasl_passwd.j2
+    dest: /etc/postfix/sasl_passwd
+    mode: 0600
+  notify: postmap sasl_passwd

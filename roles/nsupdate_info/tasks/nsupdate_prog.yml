@@ -1,0 +1,146 @@
+# install nsupdate.info
+# requires postgresql
+
+- name: Install basic dependencies for this role
+  apt:
+    pkg: [ 'git', 'python3', 'virtualenv', 'python3-pip' ]
+    install_recommends: no
+
+- name: Install dependencies for nsupdate.info
+  apt:
+    pkg: [ 'rustc', 'python3-wheel', 'python3-dev', 'libssl-dev' ]
+    install_recommends: no
+
+- name: Clone nsupdate.info git repository
+  git:
+    repo: https://github.com/nsupdate-info/nsupdate.info.git
+    dest: /srv/nsupdate.info
+    update: yes
+  tags:
+    - skip_ansible_lint
+
+- name: Install python dependencies
+  pip:
+    virtualenv: "/srv/nsupdate.info/env"
+    virtualenv_python: "python3"
+    chdir: "/srv/nsupdate.info"
+    #requirements: "requirements.d/prod.txt"
+    requirements: "requirements.d/dev.txt"
+  register: install_dependencies
+
+- name: Set project to editable
+  pip:
+    virtualenv: "/srv/nsupdate.info/env"
+    virtualenv_python: "python3"
+    chdir: "/srv/nsupdate.info"
+    name: "."
+    editable: yes
+  when: install_dependencies.changed
+
+- name: Create directory /etc/nsupdate.info
+  file:
+    path: /etc/nsupdate.info
+    state: directory
+    owner: root
+    group: www-data
+    mode: 0770
+
+- name: Create local_settings.py
+  template:
+    src: "local_settings.py.j2"
+    dest: "/etc/nsupdate.info/local_settings.py"
+    owner: root
+    group: www-data
+    mode: 0640
+  notify: restart uwsgi
+
+- name: Install psycopg2 into virtualenv
+  pip:
+    virtualenv: "/srv/nsupdate.info/env"
+    virtualenv_python: "python3"
+    chdir: "/srv/nsupdate.info"
+    name: "psycopg2"
+
+# Django 2:
+- name: Install django-createsuperuserwithpassword
+  pip:
+    virtualenv: "/srv/nsupdate.info/env"
+    virtualenv_python: "python3"
+    chdir: "/srv/nsupdate.info"
+    name: "django-createsuperuserwithpassword"
+
+- name: Initialize database
+  django_manage:
+    virtualenv: "/srv/nsupdate.info/env"
+    app_path: "/srv/nsupdate.info"
+    pythonpath: "/etc/nsupdate.info"
+    settings: "local_settings"
+    command: "migrate"
+
+# Django 2:
+- name: Create superuser account
+  django_manage:
+    virtualenv: "/srv/nsupdate.info/env"
+    app_path: "/srv/nsupdate.info"
+    pythonpath: "/etc/nsupdate.info"
+    settings: "local_settings"
+    command: >
+      createsuperuserwithpassword --preserve
+      --username='{{ nsupdate.django_superuser.username }}'
+      --email='{{ nsupdate.django_superuser.email }}'
+      --password='{{ nsupdate.django_superuser.password }}'
+
+# Django 3:
+#- name: Create superuser account
+#  environment:
+#    DJANGO_SUPERUSER_USERNAME: "{{ nsupdate.django_superuser.username }}"
+#    DJANGO_SUPERUSER_PASSWORD: "{{ nsupdate.django_superuser.password }}"
+#    DJANGO_SUPERUSER_EMAIL: "{{ nsupdate.django_superuser.email }}"
+#  django_manage:
+#    pythonpath: "/etc/nsupdate.info"
+#    virtualenv: "/srv/nsupdate.info/env"
+#    app_path: "/srv/nsupdate.info"
+#    settings: "local_settings"
+#    command: "createsuperuser --noinput"
+
+- name: Copy static web files to web root
+  django_manage:
+    virtualenv: "/srv/nsupdate.info/env"
+    app_path: "/srv/nsupdate.info"
+    pythonpath: "/etc/nsupdate.info"
+    settings: "local_settings"
+    command: "collectstatic --noinput"
+
+- name: Set ownership on static web files
+  file:
+    dest: /var/www/nsupdate.info
+    owner: www-data
+    group: www-data
+    recurse: yes
+
+- name: Install uswgi
+  apt:
+    pkg: [ 'uwsgi', 'uwsgi-plugin-python3' ]
+    install_recommends: no
+
+- name: Create uwsgi configuration file
+  template:
+    src: "uwsgi.ini.j2"
+    dest: "/etc/uwsgi/apps-available/nsupdate.info.ini"
+    owner: root
+    group: www-data
+    mode: 0640
+  notify: restart uwsgi
+
+- name: Enable uswgi configuration
+  file:
+    src: "/etc/uwsgi/apps-available/nsupdate.info.ini"
+    dest: "/etc/uwsgi/apps-enabled/nsupdate.info.ini"
+    state: link
+  notify: restart uwsgi
+
+- name: Set up cronjobs
+  template:
+    src: "cronjobs.j2"
+    dest: "/etc/cron.d/nsupdate"
+    mode: 0644

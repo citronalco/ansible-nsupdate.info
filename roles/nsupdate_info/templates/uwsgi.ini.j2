@@ -1,0 +1,12 @@
+; {{ ansible_managed }}
+
+[uwsgi]
+plugins = python3
+virtualenv = /srv/nsupdate.info/env
+socket = /run/uwsgi/uwsgi.sock
+workers = 3
+master = true
+wsgi-file=/srv/nsupdate.info/src/nsupdate/wsgi.py
+env = PYTHONPATH=/etc/nsupdate.info
+env = DJANGO_SETTINGS_MODULE=local_settings
+env = LANG=en_US.UTF-8

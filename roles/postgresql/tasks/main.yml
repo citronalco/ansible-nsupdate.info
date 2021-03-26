@@ -1,0 +1,22 @@
+- name: Install postgresql package
+  apt:
+    pkg: [ 'postgresql', 'libpq-dev', 'python3-psycopg2', 'sudo' ]
+    install_recommends: no
+
+- name: Create nsupdate database
+  become: yes
+  become_user: postgres
+  become_method: sudo
+  postgresql_db:
+    name: "nsupdate"
+
+- name: Create database user
+  become: yes
+  become_user: postgres
+  become_method: sudo
+  postgresql_user:
+    db: "nsupdate"
+    name: "{{ postgresql.username }}"
+    password: "{{ postgresql.password }}"
+    role_attr_flags: "NOCREATEROLE,NOSUPERUSER,NOCREATEDB"
+

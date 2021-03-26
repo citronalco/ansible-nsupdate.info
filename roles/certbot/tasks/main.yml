@@ -1,0 +1,32 @@
+- name: Install Certbot
+  apt:
+    pkg: [ 'certbot', 'python3-certbot-apache' ]
+
+- name: Check if certificate is already existing
+  stat:
+    path: /etc/letsencrypt/live/{{ nsupdate.basedomain.name }}/cert.pem
+  register: letsencrypt_cert
+
+- name: Stop Nginx to allow certbot to generate a cert
+  service:
+    name: "nginx"
+    state: stopped
+  when: not letsencrypt_cert.stat.exists
+
+- name: Generate new certificate
+  command: >
+    certbot certonly --standalone --noninteractive --agree-tos --email {{ nsupdate.service_contact }}
+    -d {{ nsupdate.basedomain.name }},www.{{ nsupdate.basedomain.name }},ipv4.{{ nsupdate.basedomain.name }},ipv6.{{ nsupdate.basedomain.name }}
+  when: not letsencrypt_cert.stat.exists
+
+- name: Start Nginx after cert has been generated
+  service:
+    name: "nginx"
+    state: started
+  when: not letsencrypt_cert.stat.exists
+
+- name: Add hook to certbot to reload Nginx after certificate renewal
+  template:
+    src: "renewal-hook-nginx-reload.sh.j2"
+    dest: "/etc/letsencrypt/renewal-hooks/nginx.sh"
+    mode: 0770

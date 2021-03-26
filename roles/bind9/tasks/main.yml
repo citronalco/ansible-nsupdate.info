@@ -1,0 +1,106 @@
+- name: Install bind9
+  apt:
+    pkg: ['bind9']
+    install_recommends: no
+
+- name: Create named.conf
+  template:
+    src: "named.conf.j2"
+    dest: "/etc/bind/named.conf"
+    mode: 0644
+    owner: root
+    group: bind
+  notify: rndc reload
+
+### named.basedomain configuration
+- name: Check if config for basedomain already exists
+  stat:
+    path: "/etc/bind/named.conf.{{ nsupdate.basedomain.name }}"
+  register: basecfg_stat
+
+- name: Fetch existing basedomain config file
+  slurp:
+    src: "/etc/bind/named.conf.{{ nsupdate.basedomain.name }}"
+  register: basecfg_file
+  when: basecfg_stat.stat.exists
+
+- name: Read current secret from existing basedomain config file
+  set_fact:
+    basedomain_secret: "{{ basecfg_file['content'] | b64decode | regex_findall('secret \"(\\S+)\";') | first }}"
+  when: basecfg_stat.stat.exists
+
+- name: Create new secret
+  set_fact:
+    basedomain_secret: "{{ lookup('password', '/dev/null length=64') | b64encode }}"
+  when: basedomain_secret is not defined
+
+- name: Create config for basedomain
+  template:
+    src: "named-basedomain.j2"
+    dest: "/etc/bind/named.conf.{{ nsupdate.basedomain.name }}"
+    mode: 0644
+    owner: root
+    group: bind
+  notify: rndc reload
+
+### zone file
+- name: Check if zone file for basedomain already exists
+  stat:
+    path: "/var/lib/bind/{{ nsupdate.basedomain.name }}"
+  register: zone_stat
+
+# if zonefile exists: modify existing zone file
+- name: Freeze existing basedomain zone file
+  command: "/usr/sbin/rndc freeze {{ nsupdate.basedomain.name }}"
+  notify: rndc thaw basedomain
+  when: zone_stat.stat.exists
+
+- name: Fetch existing basedomain zone file
+  slurp:
+    src: "/var/lib/bind/{{ nsupdate.basedomain.name }}"
+  register: db_file
+  when: zone_stat.stat.exists
+
+- name: Read current serial from existing local zonefile
+  set_fact:
+    bind_serial: "{{ db_file['content'] | b64decode | regex_findall('(\\d+)\\s*;\\s*serial',ignorecase=True) | first | default(1) }}"
+  when: zone_stat.stat.exists
+
+- name: Build regex to find secondary NS in zone file
+  set_fact:
+    ns2_reg: "\\s+NS\\s*((?:(?!{{ nsupdate.basedomain.name | regex_replace('\\.','\\.') }})\\S)*)\\."
+
+- name: Read secondary NS record from existing local zonefile
+  set_fact:
+    bind_ns2_record: "{{ db_file['content'] | b64decode | regex_findall(ns2_reg) | first | default(omit) }}"
+  when: zone_stat.stat.exists
+
+- name: Remove secondary NS
+  lineinfile:
+    path: "/var/lib/bind/{{ nsupdate.basedomain.name }}"
+    regexp: "^\\s+NS\\s+{{ bind_ns2_record }}\\.\\s*$"
+    state: absent
+  when: zone_stat.stat.exists and
+        bind_ns2_record is defined and
+        bind_ns2_record | default(false) != nsupdate.basedomain.secondary_ns.hostname | default(false)
+  notify: increment zone serial
+
+- name: Add secondary NS
+  lineinfile:
+    path: "/var/lib/bind/{{ nsupdate.basedomain.name }}"
+    insertafter: "^\\s+NS\\s+{{ nsupdate.basedomain.name }}\\.\\s*$"
+    line: "                        NS      {{ nsupdate.basedomain.secondary_ns.hostname }}."
+  when: zone_stat.stat.exists and
+        nsupdate.basedomain.secondary_ns.hostname is defined and
+        bind_ns2_record | default(false) != nsupdate.basedomain.secondary_ns.hostname | default(false)
+  notify: increment zone serial
+
+# if zonefile does not exist: create new zone file
+- name: Create zone file for basedomain
+  template:
+    src: "db.basedomain.j2"
+    dest: "/var/lib/bind/{{ nsupdate.basedomain.name }}"
+    group: bind
+    mode: "0640"
+  when: not zone_stat.stat.exists
+  notify: rndc reload

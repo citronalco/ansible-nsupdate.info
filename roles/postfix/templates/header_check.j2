@@ -1,0 +1,5 @@
+# {{ ansible_managed }}
+
+{% if mail.senderemail is defined %}
+/From:.*/ REPLACE From: {{ mail.senderemail }}
+{% endif %}

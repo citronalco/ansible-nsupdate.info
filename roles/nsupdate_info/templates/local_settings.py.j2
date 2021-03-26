@@ -1,0 +1,52 @@
+# {{ ansible_managed }}
+
+from nsupdate.settings.prod import *
+
+STATIC_ROOT='/var/www/nsupdate.info/static'
+# TODO: Wo wird MEDIA_ROOT benutzt?
+MEDIA_ROOT='/var/www/nsupdate.info/upload'
+
+SECRET_KEY = '{{ nsupdate.secret_key }}'
+
+BASEDOMAIN = '{{ nsupdate.basedomain.name }}'
+WWW_HOST = 'www.' + BASEDOMAIN
+WWW_IPV4_HOST = 'ipv4.' + BASEDOMAIN
+WWW_IPV6_HOST = 'ipv6.' + BASEDOMAIN
+
+
+REGISTRATION_OPEN = {{ nsupdate.registration_open | default(False) }}
+
+SERVICE_CONTACT = '{{ nsupdate.service_contact }}'
+DEFAULT_FROM_EMAIL = '{{ nsupdate.default_from_email | default(nsupdate.service_contact) }}'
+
+ALLOWED_HOSTS = [ WWW_HOST, WWW_IPV4_HOST, WWW_IPV6_HOST ]
+
+# Dropbox does not work (Error 500, ImportError: Module "social_core.backends.dropbox" does not define a "DropboxOAuth" attribute/class")
+# we do not want social oauth login anyway, seems to need additional configuration
+AUTHENTICATION_BACKENDS = (
+    #'social_core.backends.amazon.AmazonOAuth2',
+    #'social_core.backends.bitbucket.BitbucketOAuth',
+    #'social_core.backends.disqus.DisqusOAuth2',
+    #'social_core.backends.dropbox.DropboxOAuth',
+    #'social_core.backends.github.GithubOAuth2',
+    #'social_core.backends.google.GoogleOAuth2',
+    #'social_core.backends.reddit.RedditOAuth2',
+    #'social_core.backends.soundcloud.SoundcloudOAuth2',
+    #'social_core.backends.stackoverflow.StackoverflowOAuth2',
+    #'social_core.backends.twitter.TwitterOAuth',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'nsupdate',
+        'USER': '{{ postgresql.username }}',
+        'PASSWORD': '{{ postgresql.password }}',
+        'HOST': '127.0.0.1',
+        'PORT': '5432'
+    }
+}
+
+# Required to allow Ansible to create a Django superuser with password
+INSTALLED_APPS += ("django_createsuperuserwithpassword", )

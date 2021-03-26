@@ -1,0 +1,27 @@
+; {{ ansible_managed }}
+
+$ORIGIN .
+$TTL    3600
+
+{{ nsupdate.basedomain.name }}        IN      SOA     {{ nsupdate.basedomain.name }}. {{ nsupdate.service_contact | regex_replace('@', '.') }}. (
+                                         {{ bind_serial | default(1) }} ; serial
+                                      7200 ; refresh
+                                      1800 ; retry
+                                    604800 ; expire
+                                        60 ; minimum
+                                    )
+
+                    NS      {{ nsupdate.basedomain.name }}.
+{% if nsupdate.basedomain.secondary_ns.hostname is defined %}
+                    NS      {{ nsupdate.basedomain.secondary_ns.hostname }}.
+{% endif %}
+                    A       {{ ansible_default_ipv4.address }}
+                    AAAA    {{ ansible_default_ipv6.address }}
+
+$ORIGIN {{ nsupdate.basedomain.name }}.
+$TTL    3600
+
+www     IN      A       {{ ansible_default_ipv4.address }}
+www     IN      AAAA    {{ ansible_default_ipv6.address }}
+ipv4    IN      A       {{ ansible_default_ipv4.address }}
+ipv6    IN      AAAA    {{ ansible_default_ipv6.address }}
