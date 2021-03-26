@@ -1,8 +1,4 @@
-# Requirements:
-# - Server has a fixed IP address (IPv4+IPv6)
-# - DNS has A and AAAA records for this server (e.g. dyn.example.com A 12.34.56.78, dyn.example.com AAAA 2a03:1000:53:123::12)
-# - DNS has a NS record set for dyn.example.com pointing to this server (e.g. dyn.example.com NS dyn.example.com)
-# - If you use a secondary NS add a seconds NS entry to your DNS pointing to that server (e.g. dyn.example.com NS ljhgl2389ukjdhkwhd239uesadswd.free.ns.buddyns.com)
+# All variables must be set - except when stated as "optional"
 
 nsupdate:
   # Randomly generated django secret key
@@ -11,32 +7,32 @@ nsupdate:
 
   # Display service contact mail address
   service_contact: "contact@example.com"
-  # Sender mail address (default: nsupdate.service_contact)
+  # Sender mail address (optional, default: nsupdate.service_contact)
   default_from_email: "noreply@example.com"
 
   # Admin account
   django_superuser:
     username: superuser
     password: superpass
-    email: root@geierb.de
+    email: boss@example.com
 
-  # Enable user registration (default: false)
+  # Enable user registration (optional, default: false)
   registration_open: true
 
   # Domain
   basedomain:
     # this server's host name = your first dyndns domain
     name: dyn.example.com
-    # free to use for all users (default: false)
+    # free to use for all users (optional, default: false)
     public: true
-    # available for users (default: false)
+    # available for users (optional, default: false)
     available: true
 
     secondary_ns:
       # Optional: if you have a secondary DNS server (highly recommended!) enter its hostname here
       # (there are free secondary DNS server services, e.g. buddyns.com)
       #hostname: ljhgl2389ukjdhkwhd239uesadswd.free.ns.buddyns.com
-      # Optional: set your secondary DNS server's IP addresses.
+      # Optional: set your secondary DNS server's IPv4 and IPv6 addresses.
       # This limits allowed DNS zone transfers in Bind9 to this server, and nsupdate will try to update this server immediately on its own
       #ipv4: 123.456.123.456
       #ipv6: "abcd:000::1234:5678"
@@ -48,7 +44,9 @@ postgresql:
   password: TOPSECRET
 
 
-# Configure SMTP server
+# Configure SMTP server - This can be anything, from GMX to Gmail
+# Be aware that most free mail providers will only allow you to send mails with a fixed sender email address
+# In that case make sure to set this as "default_from_email" above
 mail:
   # Name of SMTP server
   smtp: "mail.example.com"
