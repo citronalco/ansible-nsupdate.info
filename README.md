@@ -11,7 +11,7 @@ This role installs everything you need to run your own dynamic DNS service:
 I found the installation of nsupdate.info pretty hard and the documentation too brief, so I used Ansible to document my experiences. Study, share, improve :)
 
 #### Requirements:
-* Server with Debian 10 or 11 and fixed IPv4+IPv6 address (e.g. `12.34.56.78` and `2a03:1000:53:123::12`)
+* Server with Debian 10 or 11 and fixed IPv4+IPv6 addresses (e.g. `12.34.56.78` and `2a03:1000:53:123::12`)
 * A domain (e.g. `example.com`)
 * Some DNS entries: If you own the domain "example.com" and want to run a dynamic DNS service on "dyn.example.com" then set this entries in the nameserver of "example.com":
   * A and AAAA records for this server:
@@ -25,3 +25,9 @@ I found the installation of nsupdate.info pretty hard and the documentation too 
 ##### Configuration:
 See `host_vars/dyn.example.com`
 
+#### Usage:
+1. Install Ansible (`apt-get install ansible`)
+1. Make sure you can log in on the server as root, without having to type in a password. (Use SSH Public Key authentication.)
+1. Edit the file `hosts` and set your server's hostname and IP address
+1. In directory `host_vars` rename the file `dyn.example.com` to your server's hostname and set your preferences in that file
+1. Execute `ansible-playbook -i hosts nsupdate.yml` to start the installation. You can use the option  "--diff" to see what Ansible does on your server.
