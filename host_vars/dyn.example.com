@@ -1,8 +1,9 @@
 # All variables must be set - except when stated as "optional"
 
 nsupdate:
-  # Randomly generated django secret key
-  # Used internally by Django for security stuff
+  # Randomly generated django secret key, used internally by Django for security stuff
+  # You may create one with this command line:
+  #    python3 -c "import secrets; print(secrets.token_urlsafe())"
   secret_key: SECRETKEY
 
   # Display service contact mail address
@@ -36,7 +37,7 @@ nsupdate:
       #ipv6: "abcd:000::1234:5678"
 
 
-# Set username and password for PostgreSQL
+# Set a username and password for PostgreSQL database
 postgresql:
   username: nsupdate
   password: TOPSECRET
