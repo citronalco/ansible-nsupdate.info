@@ -6,9 +6,9 @@ nsupdate:
   #    python3 -c "import secrets; print(secrets.token_urlsafe())"
   secret_key: SECRETKEY
 
-  # Display service contact mail address
+  # Service contact mail address shown on web site and info emails
   service_contact: "contact@example.com"
-  # Sender mail address (optional, default: nsupdate.service_contact)
+  # Sender mail address (optional, defaults to nsupdate.service_contact from above)
   default_from_email: "noreply@example.com"
 
   # Set Admin account
@@ -31,6 +31,7 @@ nsupdate:
       # Optional: if you have a secondary DNS server (highly recommended!) enter its hostname here
       # (there are free secondary DNS server services, e.g. buddyns.com)
       #hostname: ljhgl2389ukjdhkwhd239uesadswd.free.ns.buddyns.com
+
       # Optional: set your secondary DNS server's IPv4 and IPv6 addresses.
       # This limits allowed DNS zone transfers in Bind9 to this server, and nsupdate will try to update this server immediately on its own
       #ipv4: 123.456.123.456
