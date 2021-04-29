@@ -11,7 +11,7 @@ nsupdate:
   # Sender mail address (optional, default: nsupdate.service_contact)
   default_from_email: "noreply@example.com"
 
-  # Admin account
+  # Set Admin account
   django_superuser:
     username: superuser
     password: superpass
