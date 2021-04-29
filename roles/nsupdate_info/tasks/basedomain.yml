@@ -27,18 +27,16 @@
     login_host: localhost
     login_user: "{{ postgresql.username }}"
     login_password: "{{ postgresql.password }}"
-    query: UPDATE main_domain SET nameserver_update_secret = %s, public = %s, available = %s,nameserver2_ip = %s WHERE id = %s
+    query: UPDATE main_domain SET nameserver_update_secret = %s, public = %s, nameserver2_ip = %s WHERE id = %s
     positional_args:
     - "{{ basedomain_secret }}"
     - "{{ (nsupdate.basedomain.public | default(false)) | ternary('t','f') }}"
-    - "{{ (nsupdate.basedomain.available | default(false)) | ternary('t','f') }}"
     - "{{ db_secondary_ns_ipv4 }}"
     - "{{ select_domain_id_from_db.query_result[0].id }}"
   when: select_domain_id_from_db.rowcount == 1 and (
         select_domain_id_from_db.query_result[0].nameserver_update_secret != basedomain_secret or
         select_domain_id_from_db.query_result[0].nameserver2_ip != db_secondary_ns_ipv4 or
-        select_domain_id_from_db.query_result[0].public != nsupdate.basedomain.public | default(false) or
-        select_domain_id_from_db.query_result[0].available != nsupdate.basedomain.available | default(false))
+        select_domain_id_from_db.query_result[0].public != nsupdate.basedomain.public | default(false))
 
 - name: Insert basedomain into database
   postgresql_query:
@@ -56,7 +54,7 @@
     - "{{ basedomain_secret }}"
     - "HMAC_SHA512"
     - "{{ (nsupdate.basedomain.public | default(false)) | ternary('t','f') }}"
-    - "{{ (nsupdate.basedomain.available | default(false)) | ternary('t','f') }}"
+    - "{{ (nsupdate.basedomain.available | default(true)) | ternary('t','f') }}"
     - "Ansible managed"
     - "{{ nsupdate.django_superuser.username }}"
     - "{{ db_secondary_ns_ipv4 }}"

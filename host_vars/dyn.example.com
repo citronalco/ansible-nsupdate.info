@@ -23,10 +23,8 @@ nsupdate:
   basedomain:
     # this server's host name = your first dyndns domain
     name: dyn.example.com
-    # free to use for all users (optional, default: false)
+    # make this domain immediately available for all users (optional, default: false)
     public: true
-    # available for users (optional, default: false)
-    available: true
 
     secondary_ns:
       # Optional: if you have a secondary DNS server (highly recommended!) enter its hostname here
