@@ -22,7 +22,7 @@ I found the installation of nsupdate.info pretty hard and the documentation too 
   * If you use a secondary DNS server then additionally a NS rercord pointing to that server:
     * `dyn.example.com NS ljhgl2389ukjdhkwhd239uesadswd.free.ns.buddyns.com`
 
-##### Configuration:
+#### Configuration:
 See `host_vars/dyn.example.com`
 
 #### Usage:
