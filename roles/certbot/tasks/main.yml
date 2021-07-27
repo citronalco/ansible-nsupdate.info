@@ -28,5 +28,5 @@
 - name: Add hook to certbot to reload Nginx after certificate renewal
   template:
     src: "renewal-hook-nginx-reload.sh.j2"
-    dest: "/etc/letsencrypt/renewal-hooks/nginx.sh"
+    dest: "/etc/letsencrypt/renewal-hooks/post/nginx.sh"
     mode: 0770
