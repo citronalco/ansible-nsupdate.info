@@ -1,6 +1,6 @@
 # Install nsupdate.info on Debian with Ansible
 
-This role installs everything you need to run your own dynamic DNS service:
+This Playbook installs everything you need to run your own dynamic DNS service:
 * nsupdate.info as main service
 * PostgreSQL as database
 * Nginx with uwsgi as webserver
