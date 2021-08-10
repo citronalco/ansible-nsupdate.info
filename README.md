@@ -30,4 +30,4 @@ See `host_vars/dyn.example.com`
 1. Make sure you can log in on the server as root, without having to type in a password. (Use SSH Public Key authentication.)
 1. Edit the file `hosts` and set your server's hostname and IP address
 1. In directory `host_vars` rename the file `dyn.example.com` to your server's hostname and set your preferences in that file
-1. Execute `ansible-playbook -i hosts nsupdate.yml` to start the installation. You can use the option  "--diff" to see what Ansible does on your server.
+1. Execute `ansible-playbook -i hosts nsupdate.yml` to start the installation. You can use the option  `--diff` to see what Ansible does on your server in detail, and/or `--check` for a dry-run.
