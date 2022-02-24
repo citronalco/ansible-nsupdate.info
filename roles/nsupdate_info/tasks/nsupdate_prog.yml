@@ -54,12 +54,15 @@
     mode: 0640
   notify: restart uwsgi
 
-- name: Install psycopg2 into virtualenv
+- name: Install some more dependencies into virtualenv
   pip:
     virtualenv: "/srv/nsupdate.info/env"
     virtualenv_python: "python3"
     chdir: "/srv/nsupdate.info"
-    name: "psycopg2"
+    name: "{{ item }}"
+  loop:
+    - "psycopg2==2.8.6"
+    - "six"
 
 # Django 2:
 - name: Install django-createsuperuserwithpassword
